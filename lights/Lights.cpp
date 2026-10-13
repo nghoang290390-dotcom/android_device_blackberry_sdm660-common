@@ -18,10 +18,12 @@
 
 #include <android-base/file.h>
 #include <android-base/logging.h>
+#include <android-base/properties.h>
 #include <fcntl.h>
 
 using ::android::base::ReadFileToString;
 using ::android::base::WriteStringToFile;
+using ::android::base::GetBoolProperty;
 
 namespace aidl {
 namespace android {
@@ -48,16 +50,15 @@ static const std::string kButtonsFile = "/sys/class/leds/button-backlight/bright
 // List of supported lights
 const static std::vector<HwLight> kAvailableLights = {
     AutoHwLight(LightType::BACKLIGHT),
-    // Lineage does not advertise these to the user so lock them at backlight
-    //AutoHwLight(LightType::KEYBOARD),
-    //AutoHwLight(LightType::BUTTONS),
+    AutoHwLight(LightType::KEYBOARD),
+    AutoHwLight(LightType::BUTTONS),
     AutoHwLight(LightType::NOTIFICATIONS)
 };
 
 Lights::Lights() {
     // LED
     mWhiteLed = !!access((led_paths[GREEN] + "brightness").c_str(), W_OK);
-    mLedBreathType = LedBreathType::BLINK;
+    mLedBreathType = LedBreathType::BREATH;
 }
 
 // AIDL methods
@@ -71,14 +72,12 @@ ndk::ScopedAStatus Lights::setLightState(int id, const HwLightState& state) {
 
             WriteToFile(kLCDFile, brightness * BRIGHTNESS_MAX / 0xFF);
             break;
-        /* See above comment in kAvailableLights
         case (int)LightType::KEYBOARD:
             WriteToFile(kKeyboardFile, RgbaToBrightness(state.color) * BRIGHTNESS_MAX / 0xFF);
             break;
         case (int)LightType::BUTTONS:
             WriteToFile(kButtonsFile, RgbaToBrightness(state.color) * BRIGHTNESS_MAX / 0xFF);
             break;
-        */
         case (int)LightType::NOTIFICATIONS:
             mNotification = state;
             setLightLocked(mNotification);
@@ -122,6 +121,22 @@ void Lights::setLightLocked(const HwLightState& state) {
     switch (state.flashMode) {
         case FlashMode::HARDWARE:
         case FlashMode::TIMED:
+            if (blink) {
+                /* Push framework-supplied timing to kernel before enabling
+                 * breath. The qti-tri-led driver translates delay_on/off (ms)
+                 * into a smooth-fade ramp step, replacing the DT default. */
+                if (mWhiteLed) {
+                    setLedDelay(mLedUseRedAsWhite ? RED : WHITE,
+                                state.flashOnMs, state.flashOffMs);
+                } else {
+                    if (!!red)
+                        setLedDelay(RED, state.flashOnMs, state.flashOffMs);
+                    if (!!green)
+                        setLedDelay(GREEN, state.flashOnMs, state.flashOffMs);
+                    if (!!blue)
+                        setLedDelay(BLUE, state.flashOnMs, state.flashOffMs);
+                }
+            }
             if (mWhiteLed) {
                 rc = setLedBreath(mLedUseRedAsWhite ? RED : WHITE, blink);
             } else {
@@ -164,6 +179,11 @@ bool Lights::setLedBreath(led_type led, uint32_t value) {
 
 bool Lights::setLedBrightness(led_type led, uint32_t value) {
     return WriteToFile(led_paths[led] + "brightness", value);
+}
+
+void Lights::setLedDelay(led_type led, uint32_t onMs, uint32_t offMs) {
+    WriteToFile(led_paths[led] + "delay_on",  onMs);
+    WriteToFile(led_paths[led] + "delay_off", offMs);
 }
 
 // Utils

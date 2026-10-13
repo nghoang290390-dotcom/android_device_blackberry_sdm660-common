@@ -54,6 +54,9 @@ on fs
     restorecon_recursive /mnt/vendor/persist
     write /sys/kernel/boot_adsp/boot 1
 
+# Read keyboard layout from traceability partition and switch keypad device name
+    exec - root root -- /vendor/bin/sh /vendor/bin/init.keypad.sh
+
 on post-fs
     start vendor.qseecomd
     exec - system system -- /vendor/bin/init.qti.qseecomd.sh
@@ -62,7 +65,15 @@ on post-fs
 on init
     write /sys/module/qpnp_rtc/parameters/poweron_alarm 1
 
-on post-fs-data
+on late-init
+    stop console
+
+on post-fs-data && property:vendor.usb.use_gadget_hal=0
+    # Force start adbd early for debugging (legacy path only; when the
+    # AIDL gadget HAL is in use, configfs must stay at 2 and the HAL
+    # drives the function setup, so this override would defeat it).
+    setprop sys.usb.configfs 1
+    setprop sys.usb.config adb
     mkdir /data/tombstones/modem 0771 system system
     mkdir /data/tombstones/lpass 0771 system system
     mkdir /data/tombstones/wcnss 0771 system system
@@ -101,7 +112,7 @@ on boot
     mkdir /data/vendor/camera 0770 camera camera
 
 #Load WLAN driver
-   insmod /system/vendor/lib/modules/wlan.ko
+   insmod /vendor/lib/modules/wlan.ko
 
 #USB controller configuration
     setprop vendor.usb.rndis.func.name "rndis_bam"
@@ -109,7 +120,9 @@ on boot
     setprop vendor.usb.rmnet.inst.name "rmnet"
     setprop vendor.usb.dpl.inst.name "dpl"
     write /sys/module/usb_f_qcrndis/parameters/rndis_dl_max_xfer_size 15916
-    setprop sys.usb.configfs 1
+    # Don't hard-set sys.usb.configfs here: init.qcom.usb.rc already picks
+    # the right value based on vendor.usb.use_gadget_hal (2 for HAL mode,
+    # 1 for legacy via the vendor.usb.controller trigger).
 
 #Peripheral manager
 service vendor.per_mgr /system/vendor/bin/pm-service
@@ -210,16 +223,6 @@ service vendor.pd_mapper /system/vendor/bin/pd-mapper
 on property:vendor.ims.QMI_DAEMON_STATUS=1
     start vendor.imsdatadaemon
 
-#KRAB: from bb-ry crashing service, not needed
-#on property:vold.decrypt=trigger_restart_framework
-#   start cnss_diag
-
-#service cnss_diag /system/vendor/bin/cnss_diag -q -f -t HELIUM
-#   class main
-#   user system
-#   group system wifi inet sdcard_rw media_rw diag
-#   oneshot
-
 service vendor.ims_rtp_daemon /system/vendor/bin/ims_rtp_daemon
    class main
    user system
@@ -288,3 +291,39 @@ service smcinvoked /system/bin/smcinvoked
    user system
    group system
 
+# Touch keypad toggle via property (written by the TouchKeypad QS tile)
+on property:persist.vendor.touchkeypad.disabled=1
+    write /sys/devices/touch_keypad/turn_off 1
+
+on property:persist.vendor.touchkeypad.disabled=0
+    write /sys/devices/touch_keypad/turn_off 0
+
+
+# LOS24 temporary early boot logger
+on post-fs
+    mkdir /cache/los24-debug 0777 root root
+    exec - root root -- /system/bin/sh -c "echo '=== POST-FS ===' > /cache/los24-debug/stage.txt"
+    exec - root root -- /system/bin/sh -c "cat /proc/cmdline > /cache/los24-debug/cmdline.txt"
+    exec - root root -- /system/bin/sh -c "cat /proc/mounts > /cache/los24-debug/mounts-postfs.txt"
+    exec - root root -- /system/bin/sh -c "dmesg > /cache/los24-debug/dmesg-postfs.txt"
+    exec - root root -- /system/bin/sh -c "getprop > /cache/los24-debug/props-postfs.txt"
+
+on post-fs-data
+    exec - root root -- /system/bin/sh -c "echo '=== POST-FS-DATA REACHED ===' >> /cache/los24-debug/stage.txt"
+    exec - root root -- /system/bin/sh -c "cat /proc/mounts > /cache/los24-debug/mounts-postfsdata.txt"
+    exec - root root -- /system/bin/sh -c "dmesg > /cache/los24-debug/dmesg-postfsdata.txt"
+    exec - root root -- /system/bin/sh -c "getprop > /cache/los24-debug/props-postfsdata.txt"
+
+on boot
+    exec - root root -- /system/bin/sh -c "echo '=== BOOT TRIGGER REACHED ===' >> /cache/los24-debug/stage.txt"
+    exec - root root -- /system/bin/sh -c "dmesg > /cache/los24-debug/dmesg-boot.txt"
+    exec - root root -- /system/bin/sh -c "getprop > /cache/los24-debug/props-boot.txt"
+
+# CPU Boost QS: ephemeral property, defaults OFF after reboot.
+on property:vendor.cpuboost.enabled=1
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor performance
+    write /sys/devices/system/cpu/cpufreq/policy4/scaling_governor performance
+
+on property:vendor.cpuboost.enabled=0
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor schedutil
+    write /sys/devices/system/cpu/cpufreq/policy4/scaling_governor schedutil

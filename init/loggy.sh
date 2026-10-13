@@ -1,6 +1,3 @@
 #!/system/bin/sh
-date=`date +%F_%H-%M-%S`
-rm /cache/logcat.txt
-rm /cache/kmsg.txt
-logcat -b all -f  /cache/logcat.txt &
-dmesg -w > /cache/kmsg.txt
+/system/bin/dmesg > /cache/kmsg_boot.txt
+exec /system/bin/logcat -b all -f /cache/logcat_boot.txt

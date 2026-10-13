@@ -1,3 +1,4 @@
+
 # Audio
 af.fast_track_multiplier=1
 audio.deep_buffer.media=true
@@ -9,6 +10,7 @@ persist.bluetooth.a2dp_offload.cap=sbc-aac-aptx-aptxhd-ldac
 persist.bluetooth.a2dp_offload.disabled=true
 persist.vendor.audio.fluence.speaker=true
 persist.vendor.audio.fluence.voicecall=true
+persist.vendor.audio.fluence.voicecomm=true
 persist.vendor.audio.fluence.voicerec=false
 persist.vendor.audio.hifi.int_codec=true
 persist.vendor.audio.hw.binder.size_kbyte=1024
@@ -29,7 +31,7 @@ vendor.audio.feature.anc_headset.enable=true
 vendor.audio.feature.audiozoom.enable=false
 vendor.audio.feature.battery_listener.enable=false
 vendor.audio.feature.compr_cap.enable=false
-vendor.audio.feature.compr_voip.enable=true
+vendor.audio.feature.compr_voip.enable=false
 vendor.audio.feature.compress_in.enable=false
 vendor.audio.feature.compress_meta_data.enable=true
 vendor.audio.feature.concurrent_capture.enable=false
@@ -82,7 +84,7 @@ vendor.audio.use.sw.alac.decoder=true
 vendor.audio.use.sw.ape.decoder=true
 vendor.audio.volume.headset.gain.depcal=true
 vendor.audio_hal.period_size=192
-vendor.voice.path.for.pcm.voip=true
+vendor.voice.path.for.pcm.voip=false
 
 # Bluetooth
 bluetooth.device.class_of_device=90,2,12
@@ -116,10 +118,6 @@ vendor.qcom.bluetooth.soc=cherokee
 ## the preloading and non-preloading builds, please check the above issue.
 ro.zygote.disable_gl_preload=1
 
-# Blurs
-ro.surface_flinger.supports_background_blur=1
-ro.sf.blurs_are_expensive=1
-
 # Camera
 camera.aux.packagelist=net.sourceforge.opencamera,org.codeaurora.snapcam,org.lineageos.aperture
 camera.disable_zsl_mode=0
@@ -145,7 +143,7 @@ ro.hwui.render_ahead=20
 # DRM
 drm.service.enabled=true
 ro.com.widevine.cachesize=16777216
-persist.env.fastdorm.enabled=true
+persist.env.fastdorm.enabled=false
 persist.gsmapp.ezincall.video=false
 persist.sys.screenmode=1
 persist.vendor.dpm.feature=11
@@ -163,14 +161,15 @@ ro.opengles.version=196610
 
 # GPS
 persist.backup.ntpServer=0.pool.ntp.org
+ro.vendor.qti.va_odm.support=1
 
 # Logging
-persist.vendor.stbDebugCtlEnable=1
+persist.vendor.stbDebugCtlEnable=0
 ro.logdumpd.enabled=0
 
 # Miscellaneous
 persist.sys.bbsys=on
-persist.vendor.qcomsysd.enabled=1
+persist.vendor.qcomsysd.enabled=0
 ro.cp_system_other_odex=1
 sys.vendor.shutdown.waittime=500
 
@@ -184,7 +183,9 @@ ro.vendor.extension_library=libqti-perfd-client.so
 vendor.power.pasr.enabled=true
 
 # Radio
-persist.vendor.radio.enableadvancedscan=false
+persist.vendor.radio.enableadvancedscan=true
+persist.vendor.radio.data_con_rprt=1
+persist.vendor.radio.data_ltd_sys_ind=1
 persist.vendor.radio.apm_sim_not_pwdn=1
 persist.vendor.radio.sib16_support=1
 persist.vendor.radio.custom_ecc=1
@@ -207,28 +208,25 @@ vendor.video.disable.ubwc=1
 ro.boot.wificountrycode=US
 
 # USB
+# Do NOT set persist.sys.usb.config here: when the AIDL gadget HAL is in
+# use, this value ends up copied into vendor.usb.config by init.qcom.usb.rc,
+# which then triggers the HAL's "ADB + vendor composition override" path
+# (UsbGadget.cpp:465). If vendor.usb.config is anything other than "adb",
+# the HAL looks the string up in usb_compositions.conf and falls through
+# to adb-only when it's not found (the conf is a Qcom SoC-level file we
+# don't want to patch). Sony nile also omits this setting and relies on
+# Android's default persistent-config flow.
 persist.vendor.usb.config.extra=none
 vendor.usb.controller=a800000.dwc3
 vendor.usb.device=a800000.ssusb
-
-# Encryption
-ro.crypto.dm_default_key.options_format.version=2
-ro.crypto.volume.contents_mode=aes-256-xts
-ro.crypto.volume.filenames_mode=aes-256-cts
-
-# Enable ADB
-persist.service.adb.enable=1
-persist.sys.usb.state=adb
-persist.sys.usb.config=mtp,adb
-persist.sys.usb.default.config=mtp,adb
-ro.adb.secure=0
-persist.service.adb.root=1
-sys.usb.configfs=1
 vendor.usb.diag.func.name=diag
 vendor.usb.dpl.inst.name=dpl
 vendor.usb.qdss.inst.name=qdss
 vendor.usb.rmnet.func.name=rmnet_bam
 vendor.usb.rmnet.inst.name=rmnet
 vendor.usb.rndis.func.name=rndis_bam
-vendor.usb.use_ffs_mtp=0
-vendor.usb.use_gadget_hal=0
+vendor.usb.use_ffs_mtp=1
+vendor.usb.use_gadget_hal=1
+
+# HEH filename encryption is being dropped
+ro.crypto.volume.filenames_mode=aes-256-cts

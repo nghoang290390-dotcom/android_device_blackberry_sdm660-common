@@ -71,6 +71,12 @@ sh_binary {
 }
 
 sh_binary {
+    name: "init.keypad.sh",
+    src: "init.keypad.sh",
+    soc_specific: true,
+}
+
+sh_binary {
     name: "init.qcom.early_boot.sh",
     src: "init.qcom.early_boot.sh",
     soc_specific: true,
@@ -93,3 +99,11 @@ sh_binary {
     src: "init.qcom.sh",
     soc_specific: true,
 }
+
+sh_binary {
+    name: "init.qti.qseecomd.sh",
+    src: "init.qti.qseecomd.sh",
+    soc_specific: true,
+}
+
+

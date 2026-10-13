@@ -12,3 +12,12 @@ vendor_internal_prop(vendor_fingerprint_prop);
 
 # bochenekk mods - hwkeys stuff
 vendor_internal_prop(vendor_hwkey_prop);
+
+# Touch keypad toggle
+vendor_public_prop(vendor_touchkeypad_prop);
+
+# KEY2 CPU Boost QS
+vendor_public_prop(vendor_cpuboost_prop);
+
+# KEY2 BoomSound QS
+vendor_public_prop(vendor_boomsound_prop);

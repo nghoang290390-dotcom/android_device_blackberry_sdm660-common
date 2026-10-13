@@ -119,7 +119,6 @@ int read_mac(const char* path, const char magic[],
     }
 
     std::vector<char> window(magic_len);
-    size_t pos = 0;
 
     if (!in_bt.read(window.data(), magic_len))
         return -1;
@@ -238,21 +237,5 @@ int main() {
         LOG(ERROR) << "Failed to open BT MAC output: " << strerror(errno);
     }
 
-    std::vector<unsigned char> mac_bt;
-    if (read_mac(MAC_SOURCE, "macaddressbt", 12, mac_bt, 0) == 0) {
-        out_bt << mac_to_bt_string(mac_bt) << "\n";
-    }
-
-#ifdef MACLOADER_DEBUG
-    LOG(ERROR) << "Read BT MAC: " << mac_to_bt_string(mac_bt);
-#endif
-
-    if (!reboot)
-        return 0;
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-
-    property_override("sys.powerctl", "reboot", true);
-
-    return -1; // goodbye...
+    return 0;
 }

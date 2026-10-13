@@ -10,4 +10,5 @@ device.internal = 1
 
 keyboard.builtIn = 1
 keyboard.layout = stmpe_qwertz
-keyboard.characterMap = stmpe
+keyboard.characterMap = stmpe_qwertz
+keyboard.doNotWakeByDefault = 1

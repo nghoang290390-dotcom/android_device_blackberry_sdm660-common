@@ -102,10 +102,6 @@ PRODUCT_PACKAGES += \
     libsndmonitor \
     libspkrprot
 
-# Apps - PhysKeyboard support (Pastiera)
-# PRODUCT_PACKAGES += \
-    Pastiera
-
 # Common Audio configs
 PRODUCT_COPY_FILES += \
     $(call find-copy-subdir-files,*,$(COMMON_PATH)/configs/audio/,$(TARGET_COPY_OUT_VENDOR)/etc)
@@ -125,25 +121,37 @@ PRODUCT_PACKAGES += \
     android.hardware.bluetooth.audio@2.0-impl \
     vendor.qti.hardware.btconfigstore@1.0.vendor
 
-# Camera
+# Camera (Sony-style: AIDL provider + 32-bit camera HAL from source)
 PRODUCT_PACKAGES += \
-    android.hardware.camera.provider@2.4-impl \
-    android.hardware.camera.provider@2.4-service
+    android.hardware.camera.provider-service_32.lineage \
+    camera.sdm660:32 \
+    android.frameworks.displayservice@1.0.vendor:32
 
-# Configstore
+# QCamera2 HAL target - athena has same camera config as Sony nile (non-ganges sensors)
+# athena uses default code paths (no TARGET_NILE/TARGET_GANGES defines)
+# $(call soong_config_set,qcom_camera_hal,target,nile)
+
+
+# AOSP Software Keymaster 4.0 + Gatekeeper (supports FBE v2)
 PRODUCT_PACKAGES += \
-    disable_configstore
+    android.hardware.keymaster@4.0-service \
+    android.hardware.gatekeeper@1.0-service.software \
+    android.hardware.keymaster@4.0.vendor \
+    android.hardware.gatekeeper@1.0.vendor
+
+# Vibrator (QTI - supports qti-haptics input FF)
+PRODUCT_PACKAGES += \
+    vendor.qti.hardware.vibrator.service
 
 # Display
 PRODUCT_PACKAGES += \
-    android.frameworks.displayservice@1.0.vendor \
-    android.hardware.graphics.allocator@2.0-impl:64 \
-    android.hardware.graphics.allocator@2.0-service \
     android.hardware.graphics.composer@2.1-service \
-    android.hardware.graphics.mapper@2.0-impl \
+    android.hardware.graphics.mapper@3.0-impl-qti-display \
+    android.hardware.graphics.mapper@4.0-impl-qti-display \
+    vendor.qti.hardware.memtrack-service \
+    vendor.qti.hardware.display.allocator-service \
     gralloc.sdm660 \
-    hwcomposer.qcom \
-    vendor.qti.hardware.memtrack-service
+    hwcomposer.qcom
 
 # Device customizations
 PRODUCT_PACKAGES += \
@@ -240,10 +248,7 @@ PRODUCT_PACKAGES += \
 #PRODUCT_PACKAGES += \
 #    vendor.lineage.livedisplay-service.sdm
 
-# loggy
-PRODUCT_PACKAGES += \
-    loggy.sh \
-    loggy2.sh
+$(call soong_config_set_bool,livedisplay_sdm,enable_dm,false)
 
 # Media
 PRODUCT_COPY_FILES += \
@@ -271,6 +276,7 @@ PRODUCT_PACKAGES += \
     Sdm660LineageSDKOverlay \
     Sdm660SystemUIOverlay \
     Sdm660SettingsOverlay \
+    Sdm660SettingsProviderOverlay \
     Sdm660TelephonyOverlay \
     Sdm660TetheringOverlay \
     Sdm660WifiOverlayOverlay
@@ -319,7 +325,8 @@ PRODUCT_COPY_FILES += \
 
 # Power
 PRODUCT_PACKAGES += \
-    android.hardware.power-service.lineage-libperfmgr
+    android.hardware.power-service.lineage-libperfmgr \
+    libperfmgr
 
 # RCS
 PRODUCT_PACKAGES += \
@@ -340,6 +347,7 @@ PRODUCT_COPY_FILES += \
 # Ramdisk
 PRODUCT_PACKAGES += \
     fstab.qcom \
+    fstab.qcom.ramdisk \
     init.blackberry.rc \
     init.qcom.rc \
     init.qcom.usb.rc \
@@ -349,10 +357,12 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_PACKAGES += \
     init.class_main.sh \
+    init.keypad.sh \
     init.qcom.early_boot.sh \
     init.qcom.post_boot.sh \
     init.qcom.sensors.sh \
     init.qcom.sh \
+    init.qti.qseecomd.sh \
     init.qcom.usb.sh \
 
 # RenderScript
@@ -382,11 +392,9 @@ PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH) \
     hardware/google/interfaces \
     hardware/google/pixel \
+    hardware/google/pixel/power-libperfmgr \
     hardware/lineage/interfaces/power-libperfmgr \
     vendor/qcom/opensource/usb/etc
-
-# Storage
-$(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
 
 # Telephony-ext
 PRODUCT_PACKAGES += \
@@ -411,12 +419,17 @@ PRODUCT_PACKAGES_DEBUG += \
     update_engine_client
 
 # USB
+# 1.3-service.dual_role_usb reads /sys/class/dual_role_usb/, which the 4.19
+# kernel does not export. The Type-C state lives at /sys/class/typec/port0/,
+# so use the Qualcomm AIDL USB HAL pair instead (same HAL pair as Sony nile
+# on msm-4.19). Without this the framework sees zero USB ports and the
+# "USB Preferences" UI items are non-functional.
 PRODUCT_PACKAGES += \
-    android.hardware.usb@1.3-service.dual_role_usb
+    android.hardware.usb-service.qti \
+    android.hardware.usb.gadget-service.qti \
+    usb_compositions.conf
 
-# Vibrator
-PRODUCT_PACKAGES += \
-    vendor.qti.hardware.vibrator.service
+# Vibrator - using QTI vibrator service defined above
 
 # VNDK
 # Update this list with what each blob is actually for
@@ -424,9 +437,9 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     libstdc++_vendor
 
-# Touch
+# Touch - vendor.lineage.touch AIDL service (GloveMode + KeyDisabler)
 PRODUCT_PACKAGES += \
-    vendor.lineage.touch@1.0-service.blackberry
+    vendor.lineage.touch-service.blackberry
 
 # Thermal
 PRODUCT_PACKAGES += \
@@ -461,3 +474,6 @@ PRODUCT_PACKAGES += \
     libhidl_shim_full \
     libutils-v33 \
     libcutils_shim
+
+# Legacy ION implementation for sdm660 kernel 4.19
+$(call soong_config_set_bool,libion,legacy_impl,true)

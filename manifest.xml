@@ -1,4 +1,4 @@
-<manifest version="1.0" type="device" target-level="5">
+<manifest version="1.0" type="device" target-level="7">
     <hal format="hidl">
         <name>android.hardware.audio</name>
         <transport>hwbinder</transport>
@@ -50,15 +50,7 @@
             <instance>widevine</instance>
         </interface>
     </hal>
-    <hal format="hidl">
-        <name>android.hardware.gatekeeper</name>
-        <transport>hwbinder</transport>
-        <version>1.0</version>
-        <interface>
-            <name>IGatekeeper</name>
-            <instance>default</instance>
-        </interface>
-    </hal>
+    <!-- Gatekeeper provided by software service, not in manifest -->
     <hal format="hidl">
         <name>android.hardware.graphics.allocator</name>
         <transport>hwbinder</transport>
@@ -89,12 +81,13 @@
     <hal format="hidl">
         <name>android.hardware.keymaster</name>
         <transport>hwbinder</transport>
-        <version>3.0</version>
+        <version>4.0</version>
         <interface>
             <name>IKeymasterDevice</name>
             <instance>default</instance>
         </interface>
     </hal>
+    <!-- gatekeeper declared by software service vintf fragment -->
     <hal format="hidl">
         <name>android.hardware.media.omx</name>
         <transport>hwbinder</transport>
@@ -134,7 +127,6 @@
             <instance>default</instance>
         </interface>
     </hal>
-    <!--
     <hal format="hidl">
         <name>android.hardware.sensors</name>
         <transport>hwbinder</transport>
@@ -143,7 +135,7 @@
             <name>ISensors</name>
             <instance>default</instance>
         </interface>
-    </hal>-->
+    </hal>
     <hal format="hidl">
         <name>android.hardware.tetheroffload.config</name>
         <transport>hwbinder</transport>
@@ -171,6 +163,7 @@
             <instance>default</instance>
         </interface>
     </hal>
+    <!-- Vibrator HAL disabled - blocks boot -->
     <!--
     <hal format="hidl">
         <name>android.hardware.vibrator</name>
@@ -180,13 +173,34 @@
             <name>IVibrator</name>
             <instance>default</instance>
         </interface>
-    </hal>-->
+    </hal>
+    -->
+    <!--
     <hal format="hidl">
-        <name>com.dsi.ant</name>
+        <name>android.hardware.wifi</name>
         <transport>hwbinder</transport>
         <version>1.0</version>
         <interface>
-            <name>IAnt</name>
+            <name>IWifi</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+    <hal format="hidl">
+        <name>android.hardware.wifi.supplicant</name>
+        <transport>hwbinder</transport>
+        <version>2.0</version>
+        <interface>
+            <name>ISupplicant</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+    -->
+    <hal format="hidl">
+        <name>com.qualcomm.qti.ant</name>
+        <transport>hwbinder</transport>
+        <version>1.0</version>
+        <interface>
+            <name>IAntHci</name>
             <instance>default</instance>
         </interface>
     </hal>
@@ -275,6 +289,8 @@
             <instance>default</instance>
         </interface>
     </hal>
+    <!-- Goodix fingerprint HALs removed - gx_fpd crashes and blocks boot -->
+    <!--
     <hal format="hidl">
         <name>vendor.goodix.hardware.fingerprint</name>
         <transport>hwbinder</transport>
@@ -293,6 +309,7 @@
             <instance>default</instance>
         </interface>
     </hal>
+    -->
     <hal format="hidl">
         <name>vendor.qti.hardware.alarm</name>
         <transport>hwbinder</transport>
@@ -354,19 +371,6 @@
         <version>1.0</version>
         <interface>
             <name>IQdutilsDisp</name>
-            <instance>default</instance>
-        </interface>
-    </hal>
-    <hal format="hidl">
-        <name>vendor.qti.hardware.qteeconnector</name>
-        <transport>hwbinder</transport>
-        <version>1.0</version>
-        <interface>
-            <name>IAppConnector</name>
-            <instance>default</instance>
-        </interface>
-        <interface>
-            <name>IGPAppConnector</name>
             <instance>default</instance>
         </interface>
     </hal>

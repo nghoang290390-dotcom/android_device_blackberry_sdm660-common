@@ -77,4 +77,12 @@
          pulsating and RGB control would set this config to 75. -->
     <integer name="config_deviceLightCapabilities">41</integer>
 
+    <!-- Keyboard backlight control. Possible values are:
+            0 - Not supported
+            1 - Supported, but only on/off mode
+            2 - Supported with variable brightness control
+    -->
+    <!-- Keyboard/button brightness now controlled by DeviceSettings app -->
+    <integer name="config_deviceSupportsKeyboardBrightnessControl">0</integer>
+    <integer name="config_deviceSupportsButtonBrightnessControl">0</integer>
 </resources>

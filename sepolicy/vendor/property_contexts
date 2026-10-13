@@ -35,3 +35,12 @@ persist.vendor.wigig.npt.enable         u:object_r:vendor_radio_prop:s0
 
 # Hardware
 ro.hardware.chipname                    u:object_r:exported_default_prop:s0
+
+# Touch keypad
+persist.vendor.touchkeypad.disabled     u:object_r:vendor_touchkeypad_prop:s0
+
+# KEY2 CPU Boost QS
+vendor.cpuboost.enabled     u:object_r:vendor_cpuboost_prop:s0
+
+# KEY2 BoomSound QS
+vendor.boomsound.enabled     u:object_r:vendor_boomsound_prop:s0

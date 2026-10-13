@@ -6,6 +6,8 @@
 soong_namespace {
     imports: [
 	"vendor/blackberry/sdm660-common",
+	"hardware/qcom-caf/sdm660",
+	"vendor/qcom/opensource/display",
     ],
 }
 
@@ -22,4 +24,3 @@ install_symlink {
     installed_location: "firmware/wlan/qca_cld/WCNSS_qcom_cfg.ini",
     symlink_target: "/vendor/etc/wifi/WCNSS_qcom_cfg.ini",
 }
-

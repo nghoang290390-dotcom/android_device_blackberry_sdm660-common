@@ -23,11 +23,10 @@ extract_utils.tools.DEFAULT_PATCHELF_VERSION = '0_9'
 
 namespace_imports = [
     'device/blackberry/sdm660-common',
-    'hardware/qcom-caf/sdm660',
+    'hardware/qcom-caf/msm8998',
     'hardware/qcom-caf/wlan',
-    'vendor/qcom/opensource/commonsys/display',
     'vendor/qcom/opensource/dataservices',
-    'vendor/qcom/opensource/display',
+    'vendor/qcom/opensource/data-ipa-cfg-mgr-legacy-um',
 ]
 
 def lib_fixup_vendor_suffix(lib: str, partition: str, *args, **kwargs):
